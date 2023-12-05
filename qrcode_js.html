@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>QR Code Generator</h1>
+
+    <label for="decalInput">Enter Decal:</label>
+    <input type="text" id="decalInput" placeholder="Enter decal for QR code">
+    <br>
+
+    <label for="includeCheckbox">Include decal in QR:</label>
+    <input type="checkbox" id="includeCheckbox">
+    <br>
+
+    <button onclick="generateQR()">Generate QR Code</button>
+
+    <div id="qrCodeDisplay"></div>
+
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script>
+        function generateQR() {
+            var decal = document.getElementById("decalInput").value;
+            var includeText = document.getElementById("includeCheckbox").checked;
+            var input_data = qrStrFormat(decal, decalToBle(decal));
+
+            var qr = new QRCode(document.getElementById("qrCodeDisplay"), {
+                text: input_data,
+                width: 128,
+                height: 128
+            });
+
+            if (includeText) {
+                addTextToQR(decal, qr);
+            }
+        }
+
+        function decalToBle(decal) {
+            var charSet = "23679CDEFGHJKLMNPQRTWXYZ";
+            var prefix = decal.substring(0, 2);
+
+            if (prefix === "SL") {
+                return 1000000000 + parseInt(decal.substring(3));
+            } else if (prefix === "RA") {
+                var bleId = 0;
+                for (var i = 3; i < decal.length; i++) {
+                    bleId = bleId * charSet.length + charSet.indexOf(decal[i]);
+                }
+                return bleId;
+            }
+            return 0;
+        }
+
+        function qrStrFormat(decal, bleId) {
+            return '{"sn":"' + decal + '", "id":' + bleId + '}';
+        }
+
+        function addTextToQR(text, qr) {
+            var qrDiv = document.getElementById("qrCodeDisplay");
+            var imgElement = qrDiv.getElementsByTagName("img")[0];
+
+            var canvas = document.createElement("canvas");
+            canvas.width = imgElement.width;
+            canvas.height = imgElement.height;
+            var ctx = canvas.getContext("2d");
+
+            ctx.drawImage(imgElement, 0, 0);
+            ctx.font = "22px Arial";
+            ctx.fillStyle = "#000000";
+            ctx.textAlign = "center";
+            ctx.fillText(text, canvas.width / 2, canvas.height - 15);
+
+            imgElement.src = canvas.toDataURL();
+        }
+    </script>
+
+</body>
+</html>
